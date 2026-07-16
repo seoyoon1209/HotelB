@@ -11,6 +11,7 @@ from router.CustomerRouter import router as CustomerRouter
 from router.RoomTypeRouter import router as RoomTypeRouter
 from router.ReservationRouter import router as ReservationRouter
 from router.PredictionRouter import router as PredictionRouter
+from router.OverbookingRouter import router as OverbookingRouter
 
 
 @asynccontextmanager
@@ -37,6 +38,7 @@ app.include_router(CustomerRouter, prefix="/api")
 app.include_router(RoomTypeRouter, prefix="/api")
 app.include_router(ReservationRouter, prefix="/api")
 app.include_router(PredictionRouter, prefix="/api")
+app.include_router(OverbookingRouter, prefix="/api")
 
 
 @app.get("/")

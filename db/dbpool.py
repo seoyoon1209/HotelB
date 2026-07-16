@@ -1,6 +1,6 @@
 # asyncpg 커넥션 풀 관리 모듈. main.py의 lifespan에서 init()/dispose()를 호출한다.
 # 라우터에서는 DbPoolDep를 파라미터로 받아 conn.fetch/fetchrow/execute로 쿼리를 실행한다.
-# 필요 시 SSL(ssl="require") 등 접속 옵션을 create_pool 호출부에 추가할 것.
+# 지금 DB가 Render 관리형 Postgres라 SSL 필수(ssl="require"). 로컬 Postgres로 바꾸면 이 옵션 제거.
 import asyncpg
 from settings.Settings import get_settings
 from fastapi import Depends
@@ -23,6 +23,7 @@ async def init():
         dsn=dsn,
         min_size=1,
         max_size=10,
+        ssl="require",  # Render 외부 접속은 SSL 필수
         max_inactive_connection_lifetime=30.0,  # 30초 이상 비활성화된 연결은 자동 교체
     )
 
