@@ -1,3 +1,6 @@
+# asyncpg 커넥션 풀 관리 모듈. main.py의 lifespan에서 init()/dispose()를 호출한다.
+# 라우터에서는 DbPoolDep를 파라미터로 받아 conn.fetch/fetchrow/execute로 쿼리를 실행한다.
+# 필요 시 SSL(ssl="require") 등 접속 옵션을 create_pool 호출부에 추가할 것.
 import asyncpg
 from settings.Settings import get_settings
 from fastapi import Depends

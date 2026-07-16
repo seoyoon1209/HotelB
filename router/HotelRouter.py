@@ -1,3 +1,5 @@
+# hotel 테이블 관련 API. 지금은 목록 조회만 있음.
+# 추후 호텔 등록/수정, 단건 조회(GET /{hotel_id}) 등을 여기에 추가.
 from fastapi import APIRouter
 from pydantic import BaseModel
 from db.dbpool import DbPoolDep

@@ -1,3 +1,5 @@
+# reservation 테이블 관련 API. 목록 조회 + 단건 조회만 있음.
+# 예약 생성/취소, 호텔/기간별 필터링, 상태 변경(체크인/체크아웃/노쇼 처리) 등을 여기에 추가.
 from datetime import date, datetime
 from decimal import Decimal
 
