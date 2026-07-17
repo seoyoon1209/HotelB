@@ -1,5 +1,4 @@
-# room_type 테이블 관련 API. 지금은 목록 조회만 있음.
-# 호텔별 객실 유형 등록/수정, hotel_id로 필터링하는 조회 등을 여기에 추가.
+# 호텔별 객실 유형 등록/수정,
 from decimal import Decimal
 
 from fastapi import APIRouter

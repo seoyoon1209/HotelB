@@ -1,5 +1,3 @@
-# FastAPI 진입점. DB 커넥션 풀 라이프사이클 관리, CORS 설정, 라우터 등록을 담당한다.
-# 새 도메인 라우터를 추가하면 여기 import + include_router 두 줄만 추가하면 된다.
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
