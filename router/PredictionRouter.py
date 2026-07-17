@@ -1,6 +1,4 @@
-# prediction_result 테이블 관련 API. 예약별 취소 예측 이력 조회만 있음.
-# 실제 AI 모델 호출해서 새 예측 결과를 저장하는 POST 엔드포인트, 모델 서비스 연동은
-# services/prediction_service.py(아직 없음) 같은 별도 모듈로 분리해서 여기서 호출할 것.
+# prediction_result 테이블 (실제 AI 모델 호출해서 새 예측 결과)
 from datetime import datetime
 from decimal import Decimal
 from typing import Any

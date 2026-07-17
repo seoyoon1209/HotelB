@@ -1,5 +1,4 @@
-# reservation 테이블 관련 API. 목록/단건 조회에 최신 취소 예측(risk_level,
-# cancellation_probability)을 LEFT JOIN으로 같이 내려준다 (프론트 위험도 표시용).
+# reservation 테이블 관련
 # 예약 생성/취소, 상태 변경(체크인/체크아웃/노쇼 처리) 등은 아직 없음.
 from datetime import date, datetime
 from decimal import Decimal

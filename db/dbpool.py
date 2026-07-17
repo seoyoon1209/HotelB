@@ -1,6 +1,3 @@
-# asyncpg 커넥션 풀 관리 모듈. main.py의 lifespan에서 init()/dispose()를 호출한다.
-# 라우터에서는 DbPoolDep를 파라미터로 받아 conn.fetch/fetchrow/execute로 쿼리를 실행한다.
-# 지금 DB가 Render 관리형 Postgres라 SSL 필수(ssl="require"). 로컬 Postgres로 바꾸면 이 옵션 제거.
 import asyncpg
 from settings.Settings import get_settings
 from fastapi import Depends
