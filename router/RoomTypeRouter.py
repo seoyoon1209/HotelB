@@ -1,4 +1,4 @@
-# 호텔별 객실 유형 등록/수정,
+# 호텔별 객실 유형 등록/수정
 from decimal import Decimal
 
 from fastapi import APIRouter
