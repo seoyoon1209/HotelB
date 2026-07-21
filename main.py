@@ -10,6 +10,9 @@ from router.RoomTypeRouter import router as RoomTypeRouter
 from router.ReservationRouter import router as ReservationRouter
 from router.PredictionRouter import router as PredictionRouter
 from router.OverbookingRouter import router as OverbookingRouter
+from router.ReservationActionRouter import router as ReservationActionRouter
+from router.ReservationActionRouter import report_router as ActionReportRouter
+from router.ModelInfoRouter import router as ModelInfoRouter
 
 
 @asynccontextmanager
@@ -37,6 +40,9 @@ app.include_router(RoomTypeRouter, prefix="/api")
 app.include_router(ReservationRouter, prefix="/api")
 app.include_router(PredictionRouter, prefix="/api")
 app.include_router(OverbookingRouter, prefix="/api")
+app.include_router(ReservationActionRouter, prefix="/api")
+app.include_router(ActionReportRouter, prefix="/api")
+app.include_router(ModelInfoRouter, prefix="/api")
 
 
 @app.get("/")

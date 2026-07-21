@@ -1,8 +1,6 @@
 BEGIN;
 
--- =========================================================
 -- 1. 호텔
--- =========================================================
 CREATE TABLE hotel (
     hotel_id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     hotel_name         VARCHAR(100) NOT NULL,
@@ -21,9 +19,7 @@ COMMENT ON COLUMN hotel.city IS '도시';
 COMMENT ON COLUMN hotel.country IS '국가';
 
 
--- =========================================================
 -- 2. 고객
--- =========================================================
 CREATE TABLE customer (
     customer_id        BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     customer_name      VARCHAR(100),
@@ -43,10 +39,8 @@ COMMENT ON COLUMN customer.phone IS '전화번호';
 COMMENT ON COLUMN customer.country IS '고객 국가';
 
 
--- =========================================================
 -- 3. 객실 유형
 -- 호텔마다 객실 유형이 다를 수 있으므로 hotel_id 포함
--- =========================================================
 CREATE TABLE room_type (
     room_type_id       BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     hotel_id           BIGINT NOT NULL,
@@ -78,9 +72,7 @@ COMMENT ON COLUMN room_type.capacity IS '최대 수용 인원';
 COMMENT ON COLUMN room_type.base_price IS '기본 객실 가격';
 
 
--- =========================================================
 -- 4. 식사 유형
--- =========================================================
 CREATE TABLE meal_type (
     meal_type_id       BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     meal_code          VARCHAR(30) NOT NULL UNIQUE,
@@ -93,9 +85,7 @@ COMMENT ON COLUMN meal_type.meal_code IS '식사 유형 코드';
 COMMENT ON COLUMN meal_type.meal_name IS '식사 유형명';
 
 
--- =========================================================
 -- 5. 시장 구분
--- =========================================================
 CREATE TABLE market_segment (
     market_segment_id   BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     segment_code        VARCHAR(30) NOT NULL UNIQUE,
@@ -108,9 +98,7 @@ COMMENT ON COLUMN market_segment.segment_code IS '시장 구분 코드';
 COMMENT ON COLUMN market_segment.segment_name IS '시장 구분명';
 
 
--- =========================================================
 -- 6. 예약 유입 경로
--- =========================================================
 CREATE TABLE distribution_channel (
     distribution_channel_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     channel_code             VARCHAR(30) NOT NULL UNIQUE,
@@ -122,10 +110,7 @@ COMMENT ON TABLE distribution_channel IS '예약 유입 경로';
 COMMENT ON COLUMN distribution_channel.channel_code IS '예약 유입 경로 코드';
 COMMENT ON COLUMN distribution_channel.channel_name IS '예약 유입 경로명';
 
-
--- =========================================================
 -- 7. 보증금 유형
--- =========================================================
 CREATE TABLE deposit_type (
     deposit_type_id     BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     deposit_code        VARCHAR(30) NOT NULL UNIQUE,
@@ -139,10 +124,7 @@ COMMENT ON COLUMN deposit_type.deposit_code IS '보증금 유형 코드';
 COMMENT ON COLUMN deposit_type.deposit_name IS '보증금 유형명';
 COMMENT ON COLUMN deposit_type.refundable IS '환불 가능 여부';
 
-
--- =========================================================
 -- 8. 고객 유형
--- =========================================================
 CREATE TABLE customer_type (
     customer_type_id    BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     customer_type_code  VARCHAR(30) NOT NULL UNIQUE,
@@ -155,11 +137,9 @@ COMMENT ON COLUMN customer_type.customer_type_code IS '고객 유형 코드';
 COMMENT ON COLUMN customer_type.customer_type_name IS '고객 유형명';
 
 
--- =========================================================
 -- 9. 예약
 -- 숫자/날짜 데이터는 예약 테이블에 저장하고,
 -- 반복되는 범주형 데이터는 FK로 연결
--- =========================================================
 CREATE TABLE reservation (
     reservation_id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     reservation_code        VARCHAR(50) NOT NULL UNIQUE,
@@ -292,11 +272,8 @@ COMMENT ON COLUMN reservation.weekday_nights IS '주중 숙박일 수';
 COMMENT ON COLUMN reservation.adr IS '일평균 객실 요금';
 COMMENT ON COLUMN reservation.reservation_status IS '예약 상태';
 
-
--- =========================================================
 -- 10. AI 예측 결과
 -- 같은 예약을 여러 모델 버전으로 재예측할 수 있도록 1:N 구조
--- =========================================================
 CREATE TABLE prediction_result (
     prediction_id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     reservation_id            BIGINT NOT NULL,
@@ -351,8 +328,55 @@ COMMENT ON COLUMN prediction_result.feature_contributions IS 'SHAP 등 변수별
 
 
 -- =========================================================
--- 조회 및 JOIN 성능을 위한 인덱스
+-- 11. 예약 조치 이력
+-- 시뮬레이터(할인쿠폰/조식쿠폰)에서 "실제 적용"을 눌렀을 때의 기록.
+-- 조치 전/후 예측 라벨을 함께 저장해 리포트에서 "라벨 전환 성공" 건수를 집계한다.
 -- =========================================================
+CREATE TABLE reservation_action (
+    action_id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    reservation_id        BIGINT NOT NULL,
+
+    discount_percent      INTEGER NOT NULL DEFAULT 0,
+    breakfast_coupon      BOOLEAN NOT NULL DEFAULT FALSE,
+
+    probability_before    NUMERIC(6, 5) NOT NULL,
+    probability_after     NUMERIC(6, 5) NOT NULL,
+    label_before           VARCHAR(20) NOT NULL,
+    label_after            VARCHAR(20) NOT NULL,
+
+    applied_at             TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_reservation_action_reservation
+        FOREIGN KEY (reservation_id)
+        REFERENCES reservation (reservation_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT chk_reservation_action_discount
+        CHECK (discount_percent >= 0 AND discount_percent <= 100),
+
+    CONSTRAINT chk_reservation_action_probabilities
+        CHECK (
+            probability_before >= 0 AND probability_before <= 1
+            AND probability_after >= 0 AND probability_after <= 1
+        ),
+
+    CONSTRAINT chk_reservation_action_labels
+        CHECK (
+            label_before IN ('CANCEL', 'KEEP')
+            AND label_after IN ('CANCEL', 'KEEP')
+        )
+);
+
+COMMENT ON TABLE reservation_action IS '예약별 개입 조치(쿠폰 적용) 이력';
+COMMENT ON COLUMN reservation_action.discount_percent IS '적용한 ADR 할인율(%)';
+COMMENT ON COLUMN reservation_action.breakfast_coupon IS '조식쿠폰 제공 여부';
+COMMENT ON COLUMN reservation_action.probability_before IS '조치 전 취소 확률';
+COMMENT ON COLUMN reservation_action.probability_after IS '조치 후(시뮬레이션) 취소 확률';
+COMMENT ON COLUMN reservation_action.label_before IS '조치 전 예측 라벨 (CANCEL/KEEP)';
+COMMENT ON COLUMN reservation_action.label_after IS '조치 후 예측 라벨 (CANCEL/KEEP)';
+
+
+-- 조회 및 JOIN 성능을 위한 인덱스
 CREATE INDEX idx_room_type_hotel_id
     ON room_type (hotel_id);
 
@@ -382,5 +406,11 @@ CREATE INDEX idx_prediction_probability
 
 CREATE INDEX idx_prediction_risk_level
     ON prediction_result (risk_level);
+
+CREATE INDEX idx_reservation_action_reservation_id
+    ON reservation_action (reservation_id);
+
+CREATE INDEX idx_reservation_action_applied_at
+    ON reservation_action (applied_at DESC);
 
 COMMIT;
