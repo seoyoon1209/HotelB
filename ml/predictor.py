@@ -1,4 +1,6 @@
 # 예약 취소 예측 TF SavedModel 로딩 및 추론
+from __future__ import annotations
+
 from pathlib import Path
 
 try:

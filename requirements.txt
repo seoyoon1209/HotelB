@@ -5,6 +5,8 @@ pydantic
 pydantic-settings
 python-dotenv
 openai
+# Python 3.9(TF 2.8.4 호환용)에서 pydantic이 "X | None" 문법 타입을 평가할 수 있게 해줌
+eval_type_backport
 
 # 예약 취소 예측 모델(TF SavedModel) 서빙용
 # struct2tensor 0.52.0 이상은 wheel 자체가 깨져 있어(.so 누락) 절대 쓰면 안 됨.

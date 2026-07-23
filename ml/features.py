@@ -1,5 +1,7 @@
 # reservation 테이블 -> 모델 입력 피처(dict[str, str]) 변환
 # 모델(assets/*_vocab)이 요구하는 18개 입력 키를 그대로 맞춘다.
+from __future__ import annotations
+
 import asyncpg
 
 _RESERVATION_FOR_FEATURES_SQL = """
