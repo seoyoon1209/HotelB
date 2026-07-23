@@ -4,3 +4,10 @@ asyncpg
 pydantic
 pydantic-settings
 python-dotenv
+
+# 예약 취소 예측 모델(TF SavedModel) 서빙용
+# struct2tensor 0.52.0 이상은 wheel 자체가 깨져 있어(.so 누락) 절대 쓰면 안 됨.
+# 반드시 이 버전 조합 유지 (Render는 Linux x86_64라 이 조합이 정상 동작함).
+tensorflow==2.16.2
+struct2tensor==0.47.0
+tensorflow-metadata>=1.16.1,<1.17.0

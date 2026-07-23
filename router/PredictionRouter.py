@@ -3,9 +3,11 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from db.dbpool import DbPoolDep
+from ml import predictor
+from ml.features import build_features
 
 router = APIRouter(prefix="/reservations/{reservation_id}/predictions", tags=["predictions"])
 
@@ -30,3 +32,32 @@ async def list_predictions(reservation_id: int, conn: DbPoolDep):
         reservation_id,
     )
     return [dict(row) for row in rows]
+
+
+@router.post("/", response_model=PredictionResponse, status_code=201)
+async def create_prediction(reservation_id: int, conn: DbPoolDep):
+    """모델을 실제로 돌려 새 예측 결과를 만들고 prediction_result에 저장한다."""
+    features = await build_features(reservation_id, conn)
+    if features is None:
+        raise HTTPException(status_code=404, detail="예약을 찾을 수 없습니다.")
+
+    probability, predicted_status = predictor.predict(features)
+    risk_level = predictor.risk_level_of(probability)
+
+    row = await conn.fetchrow(
+        """
+        INSERT INTO prediction_result (
+            reservation_id, model_name, model_version,
+            cancellation_probability, predicted_status, risk_level, decision_threshold
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *
+        """,
+        reservation_id,
+        predictor.MODEL_NAME,
+        predictor.MODEL_VERSION,
+        probability,
+        predicted_status,
+        risk_level,
+        predictor.DECISION_THRESHOLD,
+    )
+    return dict(row)

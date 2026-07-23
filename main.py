@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from db import dbpool
+from ml import predictor
 from router.HotelRouter import router as HotelRouter
 from router.CustomerRouter import router as CustomerRouter
 from router.RoomTypeRouter import router as RoomTypeRouter
@@ -19,6 +20,8 @@ from router.ModelInfoRouter import router as ModelInfoRouter
 async def lifespan(app: FastAPI):
     await dbpool.init()
     print("DB 실행")
+    predictor.load_model()
+    print("AI 모델 로드 완료")
     yield
     await dbpool.dispose()
     print("DB 종료")
