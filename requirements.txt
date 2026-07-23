@@ -7,7 +7,7 @@ python-dotenv
 openai
 eval_type_backport
 numpy==1.22.4
-protobuf==3.20.3
+protobuf==3.19.6
 tensorflow==2.8.4
 struct2tensor==0.39.0
 tensorflow-metadata==1.8.0
