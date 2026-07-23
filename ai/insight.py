@@ -1,5 +1,5 @@
-# AI 데모의 "연관 요인 분석"/"추천 마케팅 시나리오"를 실제 LLM(OpenAI)으로 생성.
-# 호출 비용 때문에 예약 하나당 한 번만 호출하고 결과를 메모리에 캐싱한다(WEB_CONCURRENCY=1 전제).
+# Generates the AI demo's "related factor analysis" / "recommended marketing scenarios" with a real LLM (OpenAI).
+# To limit cost, calls the LLM only once per reservation and caches the result in memory (assumes WEB_CONCURRENCY=1).
 from __future__ import annotations
 
 import json
@@ -10,37 +10,38 @@ from settings.Settings import get_settings
 _client: AsyncOpenAI | None = None
 _cache: dict[int, dict] = {}
 
-# 원본 코드값 → LLM에 전달할 한글 표현 (출력이 영어 코드를 그대로 뱉지 않도록).
+# Raw code value → readable phrase passed to the LLM (so the output doesn't echo raw codes).
 _DEPOSIT_LABEL = {
-    "No Deposit": "보증금 없음",
-    "Non Refund": "환불 불가",
-    "Refundable": "환불 가능",
+    "No Deposit": "No Deposit",
+    "Non Refund": "Non-Refundable",
+    "Refundable": "Refundable",
 }
 _SEGMENT_LABEL = {
-    "OTA": "온라인 여행사(OTA)",
-    "Online TA": "온라인 여행사(OTA)",
-    "Offline TA/TO": "오프라인 여행사",
-    "Groups": "단체",
-    "Direct": "직접 예약",
-    "Corporate": "기업",
-    "Other": "기타",
+    "OTA": "Online Travel Agency (OTA)",
+    "Online TA": "Online Travel Agency (OTA)",
+    "Offline TA/TO": "Offline Travel Agency",
+    "Groups": "Groups",
+    "Direct": "Direct Booking",
+    "Corporate": "Corporate",
+    "Other": "Other",
 }
 _MEAL_LABEL = {
-    "SC": "조식 미포함",
-    "BB": "조식 포함",
-    "HB": "조식·석식 포함",
-    "FB": "조식·중식·석식 포함",
+    "SC": "No Meals",
+    "BB": "Breakfast Included",
+    "HB": "Breakfast & Dinner Included",
+    "FB": "Breakfast, Lunch & Dinner Included",
 }
 
 _SYSTEM_PROMPT = (
-    "너는 호텔 예약 취소 위험을 분석하는 어시스턴트다. "
-    "주어진 예약 속성을 보고 취소 위험과 연관된 요인을 관찰 사실 위주로 짧게 나열하고, "
-    "직원이 시도해볼 만한 마케팅/응대 시나리오를 제안해라. "
-    "요인은 상관관계일 뿐 확정된 취소 원인이 아니므로 인과관계를 단정하는 표현은 쓰지 마라. "
-    "반드시 아래 JSON 형식으로만 답하라: "
+    "You are an assistant that analyzes hotel reservation cancellation risk. "
+    "Given the reservation attributes, briefly list observation-based factors correlated with the "
+    "cancellation risk, and suggest marketing/outreach scenarios that staff could try. "
+    "The factors are correlations only, not confirmed causes of cancellation, so do not use wording "
+    "that asserts causation. "
+    "Respond ONLY in the following JSON format: "
     '{"factors": ["...", "..."], "scenarios": [{"title": "...", "message": "..."}]}. '
-    "factors는 2~4개, scenarios는 2~3개, 모두 자연스러운 한국어로 간결하게. "
-    "영어 코드값(예: OTA, Direct, Refundable)을 그대로 쓰지 말고 한국어 표현으로 풀어서 써라."
+    "Provide 2-4 factors and 2-3 scenarios, all in natural, concise English. "
+    "Do not use raw code values (e.g. OTA, Direct, Refundable); spell them out in plain English."
 )
 
 
@@ -56,18 +57,18 @@ def _get_client() -> AsyncOpenAI | None:
 
 def _build_user_prompt(reservation: dict) -> str:
     probability = reservation.get("cancellation_probability")
-    probability_text = f"{float(probability) * 100:.0f}%" if probability is not None else "정보 없음"
+    probability_text = f"{float(probability) * 100:.0f}%" if probability is not None else "N/A"
     segment = reservation.get("segment_name")
     deposit = reservation.get("deposit_name")
     meal = reservation.get("meal_code")
     return (
-        f"예약번호: {reservation.get('reservation_code')}\n"
-        f"취소 확률: {probability_text}\n"
-        f"위험도: {reservation.get('risk_level') or '정보 없음'}\n"
-        f"체크인까지 남은 일수: {reservation.get('lead_time')}일\n"
-        f"시장 세그먼트: {_SEGMENT_LABEL.get(segment, segment) or '정보 없음'}\n"
-        f"보증금 유형: {_DEPOSIT_LABEL.get(deposit, deposit) or '정보 없음'}\n"
-        f"식사 유형: {_MEAL_LABEL.get(meal, meal) or '정보 없음'}"
+        f"Reservation number: {reservation.get('reservation_code')}\n"
+        f"Cancellation probability: {probability_text}\n"
+        f"Risk level: {reservation.get('risk_level') or 'N/A'}\n"
+        f"Days until check-in: {reservation.get('lead_time')}\n"
+        f"Market segment: {_SEGMENT_LABEL.get(segment, segment) or 'N/A'}\n"
+        f"Deposit type: {_DEPOSIT_LABEL.get(deposit, deposit) or 'N/A'}\n"
+        f"Meal type: {_MEAL_LABEL.get(meal, meal) or 'N/A'}"
     )
 
 
@@ -78,7 +79,7 @@ async def get_insight(reservation: dict) -> dict:
 
     client = _get_client()
     if client is None:
-        raise RuntimeError("OPENAI_API_KEY가 설정되지 않았습니다.")
+        raise RuntimeError("OPENAI_API_KEY is not set.")
 
     settings = get_settings()
     response = await client.chat.completions.create(

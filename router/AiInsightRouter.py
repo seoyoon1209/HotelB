@@ -1,4 +1,4 @@
-# AI 데모: 연관 요인 분석 / 추천 마케팅 시나리오 (실제 LLM 호출)
+# AI demo: related factor analysis / recommended marketing scenarios (real LLM call)
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from db.dbpool import DbPoolDep
@@ -46,7 +46,7 @@ class AiInsightResponse(BaseModel):
 async def get_ai_insight(reservation_id: int, conn: DbPoolDep):
     row = await conn.fetchrow(_RESERVATION_INSIGHT_SQL, reservation_id)
     if row is None:
-        raise HTTPException(status_code=404, detail="예약을 찾을 수 없습니다.")
+        raise HTTPException(status_code=404, detail="Reservation not found.")
 
     try:
         return await insight.get_insight(dict(row))
