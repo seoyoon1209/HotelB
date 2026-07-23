@@ -1,8 +1,17 @@
 # 예약 취소 예측 TF SavedModel 로딩 및 추론
 from pathlib import Path
 
-import struct2tensor  # noqa: F401  saved_model.pb의 DecodeProto* 커스텀 연산 등록용. tf.saved_model.load보다 먼저 import 필요.
-import tensorflow as tf
+try:
+    # struct2tensor는 saved_model.pb의 DecodeProto* 커스텀 연산 등록용. tf.saved_model.load보다 먼저 import 필요.
+    # arm64 macOS(로컬 개발 환경)에는 정상 wheel이 없어 설치/임포트가 실패할 수 있음 — 그 경우 예측 기능만 비활성화하고
+    # 나머지 API는 그대로 동작하게 한다. Render(Linux x86_64) 배포 환경에서는 정상 로드된다.
+    import struct2tensor  # noqa: F401
+    import tensorflow as tf
+
+    _TF_AVAILABLE = True
+except ImportError:
+    tf = None
+    _TF_AVAILABLE = False
 
 MODEL_NAME = "hotel_cancellation_gbt"
 MODEL_VERSION = "1"
@@ -15,6 +24,9 @@ _infer = None
 
 def load_model() -> None:
     global _infer
+    if not _TF_AVAILABLE:
+        print("[ml] tensorflow/struct2tensor를 불러올 수 없어 모델 로드를 건너뜁니다.")
+        return
     model = tf.saved_model.load(str(MODEL_DIR))
     _infer = model.signatures["serving_default"]
 

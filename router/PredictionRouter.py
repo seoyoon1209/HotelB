@@ -41,7 +41,10 @@ async def create_prediction(reservation_id: int, conn: DbPoolDep):
     if features is None:
         raise HTTPException(status_code=404, detail="예약을 찾을 수 없습니다.")
 
-    probability, predicted_status = predictor.predict(features)
+    try:
+        probability, predicted_status = predictor.predict(features)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
     risk_level = predictor.risk_level_of(probability)
 
     row = await conn.fetchrow(
