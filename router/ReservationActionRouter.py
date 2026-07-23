@@ -1,6 +1,7 @@
 # reservation_action
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
@@ -118,22 +119,22 @@ async def get_action_report(conn: DbPoolDep, weeks: int = Query(default=4, ge=1,
 
 class ActionExportRow(BaseModel):
     consulted: bool
-    applied_at: datetime | None = None
+    applied_at: Optional[datetime] = None
     reservation_code: str
-    customer_name: str | None = None
-    hotel_name: str | None = None
+    customer_name: Optional[str] = None
+    hotel_name: Optional[str] = None
     check_in_date: date
     adr: Decimal
     nights: int
     adult_count: int
     child_count: int
     baby_count: int
-    discount_percent: int | None = None
-    breakfast_coupon: bool | None = None
-    probability_before: Decimal | None = None
-    probability_after: Decimal | None = None
-    label_before: str | None = None
-    label_after: str | None = None
+    discount_percent: Optional[int] = None
+    breakfast_coupon: Optional[bool] = None
+    probability_before: Optional[Decimal] = None
+    probability_after: Optional[Decimal] = None
+    label_before: Optional[str] = None
+    label_after: Optional[str] = None
 
 
 @export_router.get("/", response_model=list[ActionExportRow])
