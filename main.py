@@ -4,7 +4,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from db import dbpool
-from ml import predictor
 from router.HotelRouter import router as HotelRouter
 from router.CustomerRouter import router as CustomerRouter
 from router.RoomTypeRouter import router as RoomTypeRouter
@@ -21,8 +20,8 @@ from router.AiInsightRouter import router as AiInsightRouter
 async def lifespan(app: FastAPI):
     await dbpool.init()
     print("DB 실행")
-    predictor.load_model()
-    print("AI 모델 로드 완료")
+    # 예측 모델은 메모리를 많이 써서(TF) 시작 시점에 로드하지 않고, 첫 예측 요청 때 지연 로드한다.
+    print("서버 준비 완료 (모델은 첫 예측 요청 시 로드)")
     yield
     await dbpool.dispose()
     print("DB 종료")
