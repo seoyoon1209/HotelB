@@ -5,15 +5,9 @@ pydantic
 pydantic-settings
 python-dotenv
 openai
-# Python 3.9(TF 2.8.4 호환용)에서 pydantic이 "X | None" 문법 타입을 평가할 수 있게 해줌
-eval_type_backport
+numpy==1.22.4
+protobuf==3.20.3
 
-# 예약 취소 예측 모델(TF SavedModel) 서빙용
-# struct2tensor 0.52.0 이상은 wheel 자체가 깨져 있어(.so 누락) 절대 쓰면 안 됨.
-# tensorflow 2.15.x/2.16.x는 설치는 되지만 BoostedTreesEnsembleResourceHandleOp 커널이 없어서
-# (No OpKernel was registered) 모델 로드가 실패함 - TF 소스 확인 결과 이 커널은 2.8.x까지만 존재하고
-# 2.9.0부터 저장소에서 아예 삭제됨. 그래서 struct2tensor도 TF 2.8.x를 요구하는 버전(0.39.0)으로 맞춤.
-# 이 조합은 Python 3.9까지만 wheel이 있어서 .python-version도 3.9로 낮춰야 함.
 tensorflow==2.8.4
 struct2tensor==0.39.0
-tensorflow-metadata>=1.8.0,<1.9.0
+tensorflow-metadata==1.8.0
