@@ -1,4 +1,6 @@
 # hotel 테이블
+from __future__ import annotations
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 from db.dbpool import DbPoolDep

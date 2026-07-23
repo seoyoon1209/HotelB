@@ -1,4 +1,6 @@
 # 오버부킹 지원
+from __future__ import annotations
+
 from datetime import date, timedelta
 from decimal import Decimal
 from math import floor

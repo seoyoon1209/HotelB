@@ -1,4 +1,6 @@
 # 최신 예측 모델 정보 + 완료/취소된 예약 기준 참고용 정확도.
+from __future__ import annotations
+
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException

@@ -1,5 +1,7 @@
 # AI 데모의 "연관 요인 분석"/"추천 마케팅 시나리오"를 실제 LLM(OpenAI)으로 생성.
 # 호출 비용 때문에 예약 하나당 한 번만 호출하고 결과를 메모리에 캐싱한다(WEB_CONCURRENCY=1 전제).
+from __future__ import annotations
+
 import json
 
 from openai import AsyncOpenAI

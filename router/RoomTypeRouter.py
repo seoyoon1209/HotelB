@@ -1,4 +1,6 @@
 # 호텔별 객실 유형 등록/수정
+from __future__ import annotations
+
 from decimal import Decimal
 
 from fastapi import APIRouter

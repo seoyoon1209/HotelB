@@ -1,4 +1,6 @@
 # customer 테이블 관련 (추후 고객 등록/수정, 단건 조회, 이메일 중복 체크)
+from __future__ import annotations
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 from db.dbpool import DbPoolDep

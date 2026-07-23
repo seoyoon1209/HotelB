@@ -1,5 +1,7 @@
 # reservation 테이블 관련
 # 예약 생성/취소, 상태 변경(체크인/체크아웃/노쇼 처리) 등은 아직 없음.
+from __future__ import annotations
+
 from datetime import date, datetime
 from decimal import Decimal
 
