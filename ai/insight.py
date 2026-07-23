@@ -10,6 +10,28 @@ from settings.Settings import get_settings
 _client: AsyncOpenAI | None = None
 _cache: dict[int, dict] = {}
 
+# 원본 코드값 → LLM에 전달할 한글 표현 (출력이 영어 코드를 그대로 뱉지 않도록).
+_DEPOSIT_LABEL = {
+    "No Deposit": "보증금 없음",
+    "Non Refund": "환불 불가",
+    "Refundable": "환불 가능",
+}
+_SEGMENT_LABEL = {
+    "OTA": "온라인 여행사(OTA)",
+    "Online TA": "온라인 여행사(OTA)",
+    "Offline TA/TO": "오프라인 여행사",
+    "Groups": "단체",
+    "Direct": "직접 예약",
+    "Corporate": "기업",
+    "Other": "기타",
+}
+_MEAL_LABEL = {
+    "SC": "조식 미포함",
+    "BB": "조식 포함",
+    "HB": "조식·석식 포함",
+    "FB": "조식·중식·석식 포함",
+}
+
 _SYSTEM_PROMPT = (
     "너는 호텔 예약 취소 위험을 분석하는 어시스턴트다. "
     "주어진 예약 속성을 보고 취소 위험과 연관된 요인을 관찰 사실 위주로 짧게 나열하고, "
@@ -17,7 +39,8 @@ _SYSTEM_PROMPT = (
     "요인은 상관관계일 뿐 확정된 취소 원인이 아니므로 인과관계를 단정하는 표현은 쓰지 마라. "
     "반드시 아래 JSON 형식으로만 답하라: "
     '{"factors": ["...", "..."], "scenarios": [{"title": "...", "message": "..."}]}. '
-    "factors는 2~4개, scenarios는 2~3개, 모두 한국어로 간결하게."
+    "factors는 2~4개, scenarios는 2~3개, 모두 자연스러운 한국어로 간결하게. "
+    "영어 코드값(예: OTA, Direct, Refundable)을 그대로 쓰지 말고 한국어 표현으로 풀어서 써라."
 )
 
 
@@ -34,14 +57,17 @@ def _get_client() -> AsyncOpenAI | None:
 def _build_user_prompt(reservation: dict) -> str:
     probability = reservation.get("cancellation_probability")
     probability_text = f"{float(probability) * 100:.0f}%" if probability is not None else "정보 없음"
+    segment = reservation.get("segment_name")
+    deposit = reservation.get("deposit_name")
+    meal = reservation.get("meal_code")
     return (
         f"예약번호: {reservation.get('reservation_code')}\n"
         f"취소 확률: {probability_text}\n"
         f"위험도: {reservation.get('risk_level') or '정보 없음'}\n"
-        f"체크인까지 남은 일수(lead_time): {reservation.get('lead_time')}일\n"
-        f"시장 세그먼트: {reservation.get('segment_name') or '정보 없음'}\n"
-        f"보증금 유형: {reservation.get('deposit_name') or '정보 없음'}\n"
-        f"식사 유형 코드: {reservation.get('meal_code') or '정보 없음'}"
+        f"체크인까지 남은 일수: {reservation.get('lead_time')}일\n"
+        f"시장 세그먼트: {_SEGMENT_LABEL.get(segment, segment) or '정보 없음'}\n"
+        f"보증금 유형: {_DEPOSIT_LABEL.get(deposit, deposit) or '정보 없음'}\n"
+        f"식사 유형: {_MEAL_LABEL.get(meal, meal) or '정보 없음'}"
     )
 
 
