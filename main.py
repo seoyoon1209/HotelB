@@ -12,6 +12,7 @@ from router.PredictionRouter import router as PredictionRouter
 from router.OverbookingRouter import router as OverbookingRouter
 from router.ReservationActionRouter import router as ReservationActionRouter
 from router.ReservationActionRouter import report_router as ActionReportRouter
+from router.ReservationActionRouter import export_router as ActionExportRouter
 from router.ModelInfoRouter import router as ModelInfoRouter
 from router.AiInsightRouter import router as AiInsightRouter
 
@@ -45,6 +46,7 @@ app.include_router(PredictionRouter, prefix="/api")
 app.include_router(OverbookingRouter, prefix="/api")
 app.include_router(ReservationActionRouter, prefix="/api")
 app.include_router(ActionReportRouter, prefix="/api")
+app.include_router(ActionExportRouter, prefix="/api")
 app.include_router(ModelInfoRouter, prefix="/api")
 app.include_router(AiInsightRouter, prefix="/api")
 

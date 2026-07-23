@@ -1,5 +1,4 @@
-# reservation 테이블 관련
-# 예약 생성/취소, 상태 변경(체크인/체크아웃/노쇼 처리) 등은 아직 없음.
+# reservation
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -11,9 +10,6 @@ from db.dbpool import DbPoolDep
 
 router = APIRouter(prefix="/reservations", tags=["reservations"])
 
-# 예약 목록/단건 조회 공통 쿼리: 예약별 최신 예측 결과(risk_level, cancellation_probability)를
-# LATERAL JOIN으로 붙이고, 시뮬레이터/필터 화면에서 쓰는 호텔·고객·식사·시장구분·보증금 유형의
-# 사람이 읽을 수 있는 이름도 함께 붙인다. 예측이 아직 없는 예약은 관련 컬럼이 NULL.
 _RESERVATION_WITH_RISK_SQL = """
     SELECT
         r.*,

@@ -1,4 +1,4 @@
-# prediction_result 테이블 (실제 AI 모델 호출해서 새 예측 결과)
+# prediction_result (AI ml)
 from __future__ import annotations
 
 from datetime import datetime

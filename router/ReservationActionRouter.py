@@ -1,6 +1,5 @@
-# reservation_action 테이블 관련.
-# 리포트 화면에서 쓸 주 단위 집계(조치 건수 / 라벨 전환 성공 건수)도 제공
-from datetime import datetime
+# reservation_action
+from datetime import date, datetime
 from decimal import Decimal
 
 from fastapi import APIRouter, HTTPException, Query
@@ -9,6 +8,7 @@ from db.dbpool import DbPoolDep
 
 router = APIRouter(prefix="/reservations/{reservation_id}/actions", tags=["reservation-actions"])
 report_router = APIRouter(prefix="/actions/report", tags=["reservation-actions"])
+export_router = APIRouter(prefix="/actions/export", tags=["reservation-actions"])
 
 
 class ReservationActionCreate(BaseModel):
@@ -73,7 +73,6 @@ async def list_actions(reservation_id: int, conn: DbPoolDep):
 
 @router.delete("/", status_code=204)
 async def delete_actions(reservation_id: int, conn: DbPoolDep):
-    """예약의 조치 이력을 모두 삭제(조치 '안 함'으로 되돌리기). 리포트 집계에서도 함께 빠진다."""
     reservation = await conn.fetchrow(
         "SELECT reservation_id FROM reservation WHERE reservation_id = $1", reservation_id
     )
@@ -115,3 +114,60 @@ async def get_action_report(conn: DbPoolDep, weeks: int = Query(default=4, ge=1,
         }
         for row in rows
     ]
+
+
+class ActionExportRow(BaseModel):
+    consulted: bool
+    applied_at: datetime | None = None
+    reservation_code: str
+    customer_name: str | None = None
+    hotel_name: str | None = None
+    check_in_date: date
+    adr: Decimal
+    nights: int
+    adult_count: int
+    child_count: int
+    baby_count: int
+    discount_percent: int | None = None
+    breakfast_coupon: bool | None = None
+    probability_before: Decimal | None = None
+    probability_after: Decimal | None = None
+    label_before: str | None = None
+    label_after: str | None = None
+
+
+@export_router.get("/", response_model=list[ActionExportRow])
+async def get_action_export(conn: DbPoolDep):
+    rows = await conn.fetch(
+        """
+        SELECT
+            (ra.action_id IS NOT NULL) AS consulted,
+            ra.applied_at,
+            r.reservation_code,
+            c.customer_name,
+            h.hotel_name,
+            r.check_in_date,
+            r.adr,
+            (r.check_out_date - r.check_in_date) AS nights,
+            r.adult_count,
+            r.child_count,
+            r.baby_count,
+            ra.discount_percent,
+            ra.breakfast_coupon,
+            ra.probability_before,
+            ra.probability_after,
+            ra.label_before,
+            ra.label_after
+        FROM reservation r
+        JOIN customer c ON c.customer_id = r.customer_id
+        LEFT JOIN hotel h ON h.hotel_id = r.hotel_id
+        LEFT JOIN LATERAL (
+            SELECT * FROM reservation_action a
+            WHERE a.reservation_id = r.reservation_id
+            ORDER BY a.applied_at DESC
+            LIMIT 1
+        ) ra ON true
+        ORDER BY ra.applied_at DESC NULLS LAST, r.check_in_date, r.reservation_code
+        """
+    )
+    return [dict(row) for row in rows]
