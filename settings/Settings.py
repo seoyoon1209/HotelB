@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     db_user: str
     db_password: str
 
+    # OpenAI (AI 데모의 연관 요인/추천 시나리오 생성용)
+    openai_api_key: str | None = None
+    openai_model: str = "gpt-4o"
+
     # .env에서 읽어오기
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

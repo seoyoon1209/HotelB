@@ -14,6 +14,7 @@ from router.OverbookingRouter import router as OverbookingRouter
 from router.ReservationActionRouter import router as ReservationActionRouter
 from router.ReservationActionRouter import report_router as ActionReportRouter
 from router.ModelInfoRouter import router as ModelInfoRouter
+from router.AiInsightRouter import router as AiInsightRouter
 
 
 @asynccontextmanager
@@ -46,6 +47,7 @@ app.include_router(OverbookingRouter, prefix="/api")
 app.include_router(ReservationActionRouter, prefix="/api")
 app.include_router(ActionReportRouter, prefix="/api")
 app.include_router(ModelInfoRouter, prefix="/api")
+app.include_router(AiInsightRouter, prefix="/api")
 
 
 @app.get("/")
