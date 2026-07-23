@@ -41,7 +41,16 @@ async def get_model_info(conn: DbPoolDep):
             COUNT(*) AS total
         FROM reservation r
         JOIN latest_pred lp ON lp.reservation_id = r.reservation_id
-        WHERE r.reservation_status IN ('CANCELLED', 'CONFIRMED', 'CHECKED_IN', 'COMPLETED')
+        -- 결과가 확정된 예약만 정확도 계산에 포함:
+        --  - 취소된 예약(취소 자체가 확정된 결과)
+        --  - 체크인/투숙 완료된 예약
+        --  - 체크인 예정일이 이미 지난 예약(미취소로 결과 확정)
+        -- 체크인 전의 CONFIRMED(진행 중) 예약은 아직 결과 미확정이라 제외한다.
+        WHERE (
+            r.reservation_status = 'CANCELLED'
+            OR r.reservation_status IN ('CHECKED_IN', 'COMPLETED')
+            OR (r.reservation_status = 'CONFIRMED' AND r.check_in_date < CURRENT_DATE)
+        )
         """
     )
     total = accuracy_row["total"] or 0

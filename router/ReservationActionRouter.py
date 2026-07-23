@@ -71,6 +71,18 @@ async def list_actions(reservation_id: int, conn: DbPoolDep):
     return [dict(row) for row in rows]
 
 
+@router.delete("/", status_code=204)
+async def delete_actions(reservation_id: int, conn: DbPoolDep):
+    """예약의 조치 이력을 모두 삭제(조치 '안 함'으로 되돌리기). 리포트 집계에서도 함께 빠진다."""
+    reservation = await conn.fetchrow(
+        "SELECT reservation_id FROM reservation WHERE reservation_id = $1", reservation_id
+    )
+    if not reservation:
+        raise HTTPException(status_code=404, detail="예약을 찾을 수 없습니다.")
+
+    await conn.execute("DELETE FROM reservation_action WHERE reservation_id = $1", reservation_id)
+
+
 class ActionReportRow(BaseModel):
     period_start: str
     period_end: str
